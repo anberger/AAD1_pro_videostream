@@ -3,5 +3,13 @@
 
     <string name="app_name">AAD1_pro_videostream</string>
     <string name="hello_world">Hello world!</string>
+    <string name="start">Start</string>
+    <string name="ip">New</string>
+    <string name="stop">Stop</string>
+    <string name="ok">Ok</string>
+    <string name="cancel">Cancel</string>
+    <string name="port">Port</string>
+    <string name="setting_title">Settings</string>
+    <string name="action_settings">Settings</string>
 
 </resources>
