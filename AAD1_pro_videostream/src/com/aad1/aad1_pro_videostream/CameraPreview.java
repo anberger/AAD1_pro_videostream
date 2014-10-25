@@ -9,6 +9,8 @@ import java.util.LinkedList;
 import java.util.List;
 
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.ImageFormat;
 import android.graphics.Rect;
 import android.graphics.YuvImage;
@@ -31,11 +33,13 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
 	private static final int MAX_BUFFER = 15;
 	private byte[] mLastFrame = null;
 	private int mFrameLength;
+	public Bitmap bmp;
+	private byte[] jData;
 	
 	public CameraPreview(Context context, Camera camera) {
         super(context);
         mCamera = camera;
-
+        
         mHolder = getHolder();
         mHolder.addCallback(this);
         // deprecated setting, but required on Android versions prior to 3.0
@@ -98,12 +102,12 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     }
     
     public byte[] getImageBuffer() {
-        synchronized (mQueue) {
-			if (mQueue.size() > 0) {
-				mLastFrame = mQueue.poll();
-			}
-    	}
-        return mLastFrame;
+//        synchronized (mQueue) {
+//			if (mQueue.size() > 0) {
+//				mLastFrame = mQueue.poll();
+//			}
+//    	}
+        return jData;
     }
 
 private void resetBuff() {
@@ -137,13 +141,23 @@ private void resetBuff() {
 
         @Override
         public void onPreviewFrame(byte[] data, Camera camera) {
-            // TODO Auto-generated method stub
-        	synchronized (mQueue) {
-    			if (mQueue.size() == MAX_BUFFER) {
-    				mQueue.poll();
-    			}
-    			mQueue.add(data);
-        	}
+        	
+        	Size previewSize = camera.getParameters().getPreviewSize(); 
+        	YuvImage yuvimage=new YuvImage(data, ImageFormat.NV21, previewSize.width, previewSize.height, null);
+        	ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        	yuvimage.compressToJpeg(new Rect(0, 0, previewSize.width, previewSize.height), 80, baos);
+        	jData = baos.toByteArray();
+
+        	// Convert to Bitmap
+        	bmp = BitmapFactory.decodeByteArray(jData, 0, jData.length);
+        	int i =0;
+//            // TODO Auto-generated method stub
+//        	synchronized (mQueue) {
+//    			if (mQueue.size() == MAX_BUFFER) {
+//    				mQueue.poll();
+//    			}
+//    			mQueue.add(data);
+//        	}
         }
     };
 

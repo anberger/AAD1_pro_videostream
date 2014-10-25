@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Toast;
 
 public class MainActivity extends Activity {
@@ -56,6 +57,8 @@ public class MainActivity extends Activity {
         //create our Preview and set it as the content of the activity
         mPreview = new CameraPreview(this, mCameraManager.getCamera());
         FrameLayout preview = (FrameLayout) findViewById(R.id.camera_preview);
+        ImageView imgView = (ImageView) findViewById(R.id.imageView1);
+        imgView.setImageBitmap(mPreview.bmp);
         preview.addView(mPreview); //displays everything 
     }
     
