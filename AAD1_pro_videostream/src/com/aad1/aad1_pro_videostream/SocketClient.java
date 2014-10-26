@@ -1,8 +1,11 @@
 package com.aad1.aad1_pro_videostream;
 
 import java.io.BufferedOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 
@@ -19,6 +22,7 @@ public class SocketClient extends Thread{
 	private CameraPreview mCameraPreview;
 	private static final String TAG = "socket";
 	private String mIP = "";
+	private boolean firstTime = true;
 	private int mPort = 6000;
 	
 	
@@ -37,20 +41,12 @@ public class SocketClient extends Thread{
 	}
 	
 	public JsonObject packageBuilder(String origin, String destination, String type) throws UnsupportedEncodingException{
-		
-	 	byte[] b = mCameraPreview.getImageBuffer();
-	 
-		String encodedImage = new String(b, "UTF-8");
-	
-	 	//String encodedImage = Base64.encodeToString(b, 0, b.length, Base64.NO_WRAP);
-	 	
 		JsonObject jsonObj = new JsonObject();
-	 	jsonObj.addProperty("length", mCameraPreview.getPreviewLength());
-	    jsonObj.addProperty("width", mCameraPreview.getPreviewWidth());
-	    jsonObj.addProperty("height", mCameraPreview.getPreviewHeight());
-	    jsonObj.addProperty("clienttype", "video");
-	 	jsonObj.addProperty( "IMAGE", encodedImage);
-			return jsonObj;
+	 	jsonObj.addProperty("origin", origin);
+	    jsonObj.addProperty("destination", destination);
+	    jsonObj.addProperty("type", "video");
+	    jsonObj.addProperty("message", "online");
+		return jsonObj;
 			
 	} //function creating the package of datas to send
 
@@ -58,78 +54,24 @@ public class SocketClient extends Thread{
 	public void run() {
 		// TODO Auto-generated method stub
 		super.run();
-		try {
-			mSocket = new Socket();
-        	JsonObject jObject = packageBuilder("10.192.23.78", "10.192.70.153", "video");
-        	JsonElement encodedImageTransmitted = jObject.get("IMAGE"); //gets the image coded
-        	String a = encodedImageTransmitted.toString(); //turns the encoded image into a string
-        	//byte[] f = Base64.decode(a,Base64.NO_WRAP);
-        	
-        	byte[] f = a.getBytes("UTF-8");
-
-        	//byte[] f = a.getBytes();
-        	Bitmap bitmap = BitmapFactory.decodeByteArray(f , 0, f.length);        	
-        	//byte[] data1 = Base64.decode(a, Base64.DEFAULT);
-        	//Bitmap decodedByte = BitmapFactory.decodeByteArray(imageAsBytes, 0, imageAsBytes.length);
-			int i=0;
-			mSocket.connect(new InetSocketAddress(mIP, mPort), 10000); // hard-code server address
-			BufferedOutputStream outputStream = new BufferedOutputStream(mSocket.getOutputStream());
-			//BufferedInputStream inputStream = new BufferedInputStream(mSocket.getInputStream());     
-			
-			
-            while (mSocket.isConnected()) {
-            	outputStream.write((jObject.toString()  + "\n").getBytes());
-                //outputStream.write(mCameraPreview.getImageBuffer());
-                //outputStream.flush();
+		try {		
+			InetAddress serverAddr = InetAddress.getByName(mIP);
+			mSocket = new Socket(serverAddr, mPort);
+	
+			if(firstTime){
+				JsonObject jObject = packageBuilder("10.192.23.78", mIP, "video");
+				sendMessage2Server(jObject.toString());
+				firstTime = false;
+			}
+	
+			while(!Thread.currentThread().isInterrupted()){
+				
+				byte[] array = mCameraPreview.getImage();				
+				sendArray2Server(array);
                 if (Thread.currentThread().isInterrupted())
                     break;
             }  
-            
-           byte[] buff = new byte[256];
-           int len = 0;
-           String msg = null;
 
-//            while ((len = inputStream.read(buff)) != -1) {
-//                msg = new String(buff, 0, len);
-//                // JSON analysis
-//                JsonParser parser = new JsonParser();
-//                boolean isJSON = true;
-//                JsonElement element = null;
-//                
-//                try {
-//                    element =  parser.parse(msg);
-//                }
-//                catch (JsonParseException e) {
-//                    Log.e(TAG, "exception: " + e);
-//                    isJSON = false;
-//                }
-//                if (isJSON && element != null) {
-//                    JsonObject obj = element.getAsJsonObject();
-//                    element = obj.get("state");
-//                    
-//                    if (element != null && element.getAsString().equals("ok")) {
-//                        // send data
-//                        while (true) {
-//                        	String coucou = mCameraPreview.getImageBuffer().toString();
-//                        	
-//                        	JsonObject jObject = packageBuilder("10.192.23.78", "10.192.70.153", "video", coucou);
-//                        	
-//                        	outputStream.write(jObject.toString().getBytes());
-//                            outputStream.write(mCameraPreview.getImageBuffer());
-//                            outputStream.flush();
-//                            if (Thread.currentThread().isInterrupted())
-//                                break;
-//                        }  
-//                        break;
-//                    }
-//                }
-//                else {
-//                    break;
-//                }
-//            }
-
-			//outputStream.close();
-			//inputStream.close();
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -146,6 +88,32 @@ public class SocketClient extends Thread{
 		}
 	} //making the class work
 
+	private void sendArray2Server(byte[] array){
+		OutputStream out;
+		try {
+			out = mSocket.getOutputStream();
+			DataOutputStream dos = new DataOutputStream(out);
+	        dos.writeInt(array.length);
+	        dos.write(array, 0, array.length);
+	        dos.flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}         
+	}
+	private void sendMessage2Server(String message){
+		OutputStream out;
+		try {
+			out = mSocket.getOutputStream();
+			DataOutputStream dos = new DataOutputStream(out);
+	        dos.write((message + "\n").getBytes());
+	        dos.flush();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}         
+	}
+	
 	public void close() {
 		if (mSocket != null) {
 			try {

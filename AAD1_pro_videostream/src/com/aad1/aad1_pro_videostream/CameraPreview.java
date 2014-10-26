@@ -101,12 +101,7 @@ public class CameraPreview extends SurfaceView implements SurfaceHolder.Callback
     	mCamera = camera;
     }
     
-    public byte[] getImageBuffer() {
-//        synchronized (mQueue) {
-//			if (mQueue.size() > 0) {
-//				mLastFrame = mQueue.poll();
-//			}
-//    	}
+    public byte[] getImage() {
         return jData;
     }
 
@@ -147,17 +142,6 @@ private void resetBuff() {
         	ByteArrayOutputStream baos = new ByteArrayOutputStream();
         	yuvimage.compressToJpeg(new Rect(0, 0, previewSize.width, previewSize.height), 80, baos);
         	jData = baos.toByteArray();
-
-        	// Convert to Bitmap
-        	bmp = BitmapFactory.decodeByteArray(jData, 0, jData.length);
-        	int i =0;
-//            // TODO Auto-generated method stub
-//        	synchronized (mQueue) {
-//    			if (mQueue.size() == MAX_BUFFER) {
-//    				mQueue.poll();
-//    			}
-//    			mQueue.add(data);
-//        	}
         }
     };
 
