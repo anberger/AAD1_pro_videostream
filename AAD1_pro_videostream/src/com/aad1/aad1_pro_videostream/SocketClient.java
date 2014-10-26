@@ -1,27 +1,19 @@
 package com.aad1.aad1_pro_videostream;
 
-import java.io.BufferedOutputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.Socket;
-
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.util.Base64;
 import android.util.Log;
 
 public class SocketClient extends Thread{
 	private Socket mSocket;
 	private CameraPreview mCameraPreview;
 	private static final String TAG = "socket";
-	private String mIP = "";
+	private String mIP = "10.192.70.223";
 	private boolean firstTime = true;
 	private int mPort = 6000;
 	
@@ -65,9 +57,9 @@ public class SocketClient extends Thread{
 			}
 	
 			while(!Thread.currentThread().isInterrupted()){
-				
 				byte[] array = mCameraPreview.getImage();				
 				sendArray2Server(array);
+				Thread.sleep(50);
                 if (Thread.currentThread().isInterrupted())
                     break;
             }  
